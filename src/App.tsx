@@ -66,7 +66,7 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 		const loader = new GLTFLoader();
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 
-		loader.load('/housewithoutplane.glb', (gltf) => {
+		loader.load('/house.glb', (gltf) => {
 			const object3D = gltf.scene;
 			scene.add(object3D);
 			assets3D.push(object3D);

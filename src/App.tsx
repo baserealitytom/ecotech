@@ -67,8 +67,8 @@ const THREEScene: FunctionComponent = () => {
 		//sceneDirectionalLight.rotation.set(0, 90, 0);
 		scene.add(sceneDirectionalLight);
 
-		const dirLightHelper = new THREE.PointLightHelper(sceneDirectionalLight, 5);
-		scene.add(dirLightHelper);
+		//const dirLightHelper = new THREE.PointLightHelper(sceneDirectionalLight, 5);
+		//scene.add(dirLightHelper);
 
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();
@@ -87,7 +87,7 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.minPolarAngle = Math.PI / 4 - offset;
 		orbitControls.maxPolarAngle = Math.PI / 4 + offset * 5;
 		orbitControls.update();
-		orbitControls.enableZoom = true;
+		orbitControls.enableZoom = false;
 
 		camera.position.z = 5;
 		renderer.setSize(window.innerWidth, window.innerHeight);
@@ -133,7 +133,7 @@ const App = () => {
 		<div>
 			{!isLoaded && <LoadingScreen />}
 			<Watermark />
-			<SmartThermostat />
+			{!isLoaded && <SmartThermostat />}
 			<THREEScene />
 		</div>
 	)

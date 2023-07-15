@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 const LoadingScreen: FunctionComponent = () => {
 	return (
 		<div className='LoadingScreen'>
-			<img src='/ecotechlogo.png'></img>
+			<img src='ecotech/ecotechlogo.png'></img>
 			<span>Loading</span>
 		</div>
 	)
@@ -73,7 +73,7 @@ const THREEScene: FunctionComponent = () => {
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();
 
-		loader.load('/house.glb', (gltf) => {
+		loader.load('ecotech/house.glb', (gltf) => {
 			const object3D = gltf.scene;
 			scene.add(object3D);
 			assets3D.push(object3D);
@@ -109,7 +109,7 @@ const THREEScene: FunctionComponent = () => {
 const Watermark: FunctionComponent = () => {
 	return (
 		<div className='watermark'>
-			<img src='/ecotechlogo.png'></img>
+			<img src='echotech/ecotechlogo.png'></img>
 			<span style={{ right: '0' }}>SmartThermo™</span>
 		</div>
 	)

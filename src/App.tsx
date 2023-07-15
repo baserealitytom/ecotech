@@ -43,7 +43,7 @@ const THREEScene: FunctionComponent = () => {
 			canvas: canvasRef.current,
 			antialias: true
 		});
-		renderer.setClearColor(new THREE.Color(0x68d5e8));
+		renderer.setClearColor(new THREE.Color(0xfad4a0), 0);
 		const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
 		camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
 		const orbitControls = new OrbitControls(camera, renderer.domElement);

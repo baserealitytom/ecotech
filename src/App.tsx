@@ -5,10 +5,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
 
+console.log('url', import.meta.url);
+
 const LoadingScreen: FunctionComponent = () => {
 	return (
 		<div className='LoadingScreen'>
-			<img src='ecotech/ecotechlogo.png'></img>
+			<img src='/ecotechlogo.png'></img>
 			<span>Loading</span>
 		</div>
 	)
@@ -73,7 +75,7 @@ const THREEScene: FunctionComponent = () => {
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();
 
-		loader.load('ecotech/house.glb', (gltf) => {
+		loader.load('/house.glb', (gltf) => {
 			const object3D = gltf.scene;
 			scene.add(object3D);
 			assets3D.push(object3D);
@@ -109,7 +111,7 @@ const THREEScene: FunctionComponent = () => {
 const Watermark: FunctionComponent = () => {
 	return (
 		<div className='watermark'>
-			<img src='echotech/ecotechlogo.png'></img>
+			<img src='/ecotechlogo.png'></img>
 			<span style={{ right: '0' }}>SmartThermo™</span>
 		</div>
 	)

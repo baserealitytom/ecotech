@@ -42,6 +42,7 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 		});
 		renderer.setClearColor(new THREE.Color(0x6dab6b));
 		const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
+		camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
 		const orbitControls = new OrbitControls(camera, renderer.domElement);
 
 		orbitControls.autoRotate = false;
@@ -65,23 +66,32 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 		const loader = new GLTFLoader();
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 
-		loader.load('/house.glb', (gltf) => {
-			scene.add(gltf.scene);
-			assets3D.push(gltf.scene);
+		loader.load('/housewithoutplane.glb', (gltf) => {
+			const object3D = gltf.scene;
+			scene.add(object3D);
+			assets3D.push(object3D);
+			object3D.scale.set(0.1, 0.1, 0.1);
+			object3D.position.set(-0.5, 0, 0);
 		});
 
 		camera.lookAt(0, 0, 0);
 		orbitControls.target.set(0, 0, 0);
+		const offset = 0.1;
+		orbitControls.minPolarAngle = Math.PI / 4 - offset;
+		orbitControls.maxPolarAngle = Math.PI / 4 + offset * 5;
 		orbitControls.update();
+		orbitControls.enableZoom = false;
 
-		camera.position.z = 10;
+		camera.position.z = 5;
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls));
-
-		window.addEventListener('resize', () => {
-			canvasRef.current.width = window.innerWidth;
-			canvasRef.current.height = window.innerHeight;
-		});
+		window.onresize = () => {
+			const width = window.innerWidth;
+			const height = window.innerHeight;
+			renderer.setSize(width, height);
+			camera.aspect = width / height;
+			camera.updateProjectionMatrix();
+		}
 	});
 
 	return (

@@ -48,7 +48,7 @@ const THREEScene: FunctionComponent = () => {
 		camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
 		const orbitControls = new OrbitControls(camera, renderer.domElement);
 
-		orbitControls.autoRotate = true;
+		orbitControls.autoRotate = false;
 		orbitControls.autoRotateSpeed = 5;
 		orbitControls.enableDamping = true;
 		orbitControls.dampingFactor = .01;
@@ -60,14 +60,16 @@ const THREEScene: FunctionComponent = () => {
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
 		scene.add(ambientLight);
 
-		/*const shaderMaterial = new THREE.ShaderMaterial({
-			uniforms: shaderUniforms,
-			vertexShader: vertexShader,
-			fragmentShader: fragmentShader
-		});*/
+		const sceneDirectionalLight = new THREE.PointLight(new THREE.Color(0xffffff), 1);
+		sceneDirectionalLight.position.set(0, -1, 0);
+		//sceneDirectionalLight.rotation.set(0, 90, 0);
+		scene.add(sceneDirectionalLight);
 
-		const loader = new GLTFLoader();
+		const dirLightHelper = new THREE.PointLightHelper(sceneDirectionalLight, 5);
+		scene.add(dirLightHelper);
+
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
+		const loader = new GLTFLoader();
 
 		loader.load('/house.glb', (gltf) => {
 			const object3D = gltf.scene;
@@ -83,7 +85,7 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.minPolarAngle = Math.PI / 4 - offset;
 		orbitControls.maxPolarAngle = Math.PI / 4 + offset * 5;
 		orbitControls.update();
-		orbitControls.enableZoom = false;
+		orbitControls.enableZoom = true;
 
 		camera.position.z = 5;
 		renderer.setSize(window.innerWidth, window.innerHeight);
@@ -106,8 +108,16 @@ const Watermark: FunctionComponent = () => {
 
 	return (
 		<div className='watermark'>
-			<span className='watermarkSpan'>EcoTech</span>
+			<img src='/ecotechlogo.png'></img>
+			<span style={{ right: '0' }}>SmartThermo™</span>
 		</div>
+	)
+};
+
+const SmartThermometer: FunctionComponent = () => {
+
+	return (
+		<div className='smartThermometer'></div>
 	)
 };
 
@@ -115,15 +125,17 @@ type AppState = 'LOADING' | 'LOADED';
 
 const App = () => {
 	const [isLoaded, setIsLoaded] = useState(false);
+	const simulateLoadTimeMS = 500;
 	useEffect(() => {
 		setTimeout(() => {
 			setIsLoaded(true);
-		}, 2000);
+		}, simulateLoadTimeMS);
 	}, []);
 	return (
 		<div>
 			{!isLoaded && <LoadingScreen />}
 			<Watermark />
+			<SmartThermometer />
 			<THREEScene />
 		</div>
 	)

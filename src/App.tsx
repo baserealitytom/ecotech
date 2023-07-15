@@ -1,5 +1,5 @@
 import './App.css';
-import React, { FunctionComponent, useEffect, useState, useRef } from 'react';
+import React, { FunctionComponent, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -50,13 +50,11 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 		orbitControls.dampingFactor = .01;
 		orbitControls.update();
 
-		/*const directionalLight = new THREE.DirectionalLight(new THREE.Color(0xffffff), 1);
+		const directionalLight = new THREE.DirectionalLight(new THREE.Color(0xffffff), 1);
 		scene.add(directionalLight);
 
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
-		scene.add(ambientLight);*/
-
-		const geometry = new THREE.BoxGeometry(100, 2, 100, 20, 100, 100);
+		scene.add(ambientLight);
 
 		const shaderMaterial = new THREE.ShaderMaterial({
 			uniforms: shaderUniforms,
@@ -65,8 +63,12 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 		});
 
 		const loader = new GLTFLoader();
+		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 
-
+		loader.load('/house.glb', (gltf) => {
+			scene.add(gltf.scene);
+			assets3D.push(gltf.scene);
+		});
 
 		camera.lookAt(0, 0, 0);
 		orbitControls.target.set(0, 0, 0);

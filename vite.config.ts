@@ -9,5 +9,5 @@ console.log(ASSET_URL);
 export default defineConfig({
 	plugins: [react()],
 	assetsInclude: ['**/*.glb'],
-	base: `${ASSET_URL}/`
+	base: `/ecotech/`
 });

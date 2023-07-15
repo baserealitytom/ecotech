@@ -1,18 +1,16 @@
 import './App.css';
-import React, { FunctionComponent, useEffect, useRef } from 'react';
+import { FunctionComponent, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { vertexShader, fragmentShader } from './shader';
+//import { vertexShader, fragmentShader } from './shader';
 
-interface THREEProps { }
-
-const THREEScene: FunctionComponent<THREEProps> = (props) => {
+const THREEScene: FunctionComponent = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null!);
 
-	const clock = new THREE.Clock();
+	//const clock = new THREE.Clock();
 
-	const shaderUniforms = {
+	/*const shaderUniforms = {
 		u_time: { value: 0.0 },
 		u_resolution: {
 			value: {
@@ -20,16 +18,14 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 				y: window.innerHeight * window.devicePixelRatio
 			}
 		}
-	}
+	}*/
 
 	const render = (renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, orbitControls: OrbitControls) => {
 		renderer.render(scene, camera);
 		orbitControls.update();
 
-		const delta = clock.getDelta();
-		const elapsed = clock.getElapsedTime();
-
-		shaderUniforms.u_time.value = elapsed;
+		//const delta = clock.getDelta();
+		//const elapsed = clock.getElapsedTime();
 
 		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls));
 	};
@@ -57,11 +53,11 @@ const THREEScene: FunctionComponent<THREEProps> = (props) => {
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
 		scene.add(ambientLight);
 
-		const shaderMaterial = new THREE.ShaderMaterial({
+		/*const shaderMaterial = new THREE.ShaderMaterial({
 			uniforms: shaderUniforms,
 			vertexShader: vertexShader,
 			fragmentShader: fragmentShader
-		});
+		});*/
 
 		const loader = new GLTFLoader();
 		const assets3D: (THREE.Group | THREE.Mesh)[] = [];

@@ -6,9 +6,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
 
 const LoadingScreen: FunctionComponent = () => {
-
 	return (
-		<div className='LoadingScreen'>Loading</div>
+		<div className='LoadingScreen'>
+			<img src='/ecotechlogo.png'></img>
+			<span>Loading</span>
+		</div>
 	)
 };
 
@@ -105,7 +107,6 @@ const THREEScene: FunctionComponent = () => {
 };
 
 const Watermark: FunctionComponent = () => {
-
 	return (
 		<div className='watermark'>
 			<img src='/ecotechlogo.png'></img>
@@ -114,14 +115,11 @@ const Watermark: FunctionComponent = () => {
 	)
 };
 
-const SmartThermometer: FunctionComponent = () => {
-
+const SmartThermostat: FunctionComponent = () => {
 	return (
-		<div className='smartThermometer'></div>
+		<div className='smartThermostat'></div>
 	)
 };
-
-type AppState = 'LOADING' | 'LOADED';
 
 const App = () => {
 	const [isLoaded, setIsLoaded] = useState(false);
@@ -135,7 +133,7 @@ const App = () => {
 		<div>
 			{!isLoaded && <LoadingScreen />}
 			<Watermark />
-			<SmartThermometer />
+			<SmartThermostat />
 			<THREEScene />
 		</div>
 	)

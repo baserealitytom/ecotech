@@ -6,7 +6,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
 import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 
-console.log('url', import.meta.url);
+let mouseDown = false;
+let slideX = 0;
+let threeCameraMask: THREE.Mesh;
 
 const LoadingScreen: FunctionComponent = () => {
 	return (
@@ -16,6 +18,28 @@ const LoadingScreen: FunctionComponent = () => {
 		</div>
 	)
 };
+
+const Slider: FunctionComponent = () => {
+	const sliderRef = useRef<HTMLDivElement>(null!);
+	useEffect(() => {
+		sliderRef.current.addEventListener('pointerdown', () => {
+			mouseDown = true;
+		});
+		window.addEventListener('pointerup', () => {
+			mouseDown = false;
+		});
+		window.addEventListener('pointermove', (e) => {
+			console.log(mouseDown);
+			if (mouseDown) {
+				slideX = e.clientX;
+				sliderRef.current.style.left = slideX + 'px';
+			}
+		});
+	}, []);
+	return (
+		<div ref={sliderRef} className='Slider'></div>
+	)
+}
 
 const THREEScene: FunctionComponent = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null!);
@@ -33,24 +57,37 @@ const THREEScene: FunctionComponent = () => {
 	}*/
 
 	const render = (renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, orbitControls: OrbitControls) => {
-		renderer.render(scene, camera);
+		//renderer.render(scene, camera);
 		orbitControls.update();
+
+		const slidePercentage = slideX / window.innerWidth;
+		const x = 0.15 * slidePercentage;
+		if (mouseDown) threeCameraMask.position.set(x, 0, -0.1);
 
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
 
+		renderer.autoClear = true;
+		camera.layers.set(0);
+		renderer.render(scene, camera);
+
+		renderer.autoClear = false;
+
+		camera.layers.set(1);
+		renderer.render(scene, camera);
+
 		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls));
 	};
 
-	const addRectLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+	/*const addRectLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
 		const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
 		const rectLightHelper = new RectAreaLightHelper(rectLight);
 		rectLight.rotation.copy(rotation);
 		rectLight.position.copy(position);
 		scene.add(rectLight);
-	};
+	};*/
 
-	const addScreenLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+	/*const addScreenLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
 		//const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
 		//const rectLightHelper = new RectAreaLightHelper(rectLight);
 		const geometry = new THREE.PlaneGeometry(width, height);
@@ -64,26 +101,19 @@ const THREEScene: FunctionComponent = () => {
 
 		/*const pointLight = new THREE.PointLight(color, intensity, 1);
 		pointLight.position.copy(position);
-		scene.add(pointLight);*/
-	};
+		scene.add(pointLight);
+	};*/
 
 	const addCameraMask = (camera: THREE.PerspectiveCamera, width: number, height: number, color: THREE.Color) => {
-		//const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
-		//const rectLightHelper = new RectAreaLightHelper(rectLight);
 		const geometry = new THREE.PlaneGeometry(width, height);
 		const material = new THREE.MeshBasicMaterial({ color: color });
 		material.side = THREE.DoubleSide;
 		material.colorWrite = false;
 
-		const screenLight = new THREE.Mesh(geometry, material);
-		screenLight.renderOrder = 1;
-		//screenLight.rotation.copy(rotation);
-		screenLight.position.set(width / 2, 0, -0.1);
-		camera.add(screenLight);
-
-		/*const pointLight = new THREE.PointLight(color, intensity, 1);
-		pointLight.position.copy(position);
-		scene.add(pointLight);*/
+		threeCameraMask = new THREE.Mesh(geometry, material);
+		threeCameraMask.renderOrder = 1;
+		threeCameraMask.position.set(width / 2, 0, -0.1);
+		camera.add(threeCameraMask);
 	};
 
 	const addWindowLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
@@ -124,10 +154,20 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.update();
 
 		const directionalLight = new THREE.DirectionalLight(new THREE.Color(0xffffff), 0.4);
+		directionalLight.layers.set(0);
 		scene.add(directionalLight);
 
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5);
+		ambientLight.layers.set(0);
 		scene.add(ambientLight);
+
+		const directionalLight2 = new THREE.DirectionalLight(new THREE.Color(0xffffff), 0.4);
+		directionalLight2.layers.set(1);
+		scene.add(directionalLight2);
+
+		const ambientLight2 = new THREE.AmbientLight(new THREE.Color(0xffffff), 1);
+		ambientLight2.layers.set(1);
+		scene.add(ambientLight2);
 
 		const color = new THREE.Color(0xff9c00);
 		const intensity = 0.1;
@@ -138,7 +178,7 @@ const THREEScene: FunctionComponent = () => {
 
 		//addScreenLight(0.33, 0.18, 25, new THREE.Color(0xffffff), scene, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
 
-		const assets3D: (THREE.Group | THREE.Mesh)[] = [];
+		//const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();
 
 		loader.load('/ecotech/house.glb', (gltf) => {
@@ -148,6 +188,7 @@ const THREEScene: FunctionComponent = () => {
 			object3D.scale.set(0.1, 0.1, 0.1);
 			object3D.position.set(-0.5, 0, 0);
 			object3D.traverse(mesh => mesh.renderOrder = 2);
+			object3D.traverse(mesh => mesh.layers.set(1));
 		});
 
 		addCameraMask(camera, 0.15, 0.2, new THREE.Color(0xffffff)); // render order 1
@@ -159,6 +200,7 @@ const THREEScene: FunctionComponent = () => {
 			object3D.scale.set(0.1, 0.1, 0.1);
 			object3D.position.set(-0.5, 0, 0);
 			object3D.traverse(mesh => mesh.renderOrder = 0);
+			object3D.traverse(mesh => mesh.layers.set(0));
 		});
 
 		camera.lookAt(0, 0, 0);
@@ -216,6 +258,7 @@ const App = () => {
 		<div>
 			{!isLoaded && <LoadingScreen />}
 			<Watermark />
+			<Slider />
 			{!isLoaded && <SmartThermostat />}
 			<THREEScene />
 		</div>

@@ -116,11 +116,11 @@ const THREEScene: FunctionComponent = () => {
 		camera.add(threeCameraMask);
 	};
 
-	const addWindowLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+	const addWindowLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
 		//const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
 		//const rectLightHelper = new RectAreaLightHelper(rectLight);
 		const geometry = new THREE.PlaneGeometry(width, height);
-		const material = new THREE.MeshBasicMaterial({ color: color });
+		const material = new THREE.MeshBasicMaterial();
 		material.side = THREE.DoubleSide;
 		material.colorWrite = false;
 
@@ -169,12 +169,9 @@ const THREEScene: FunctionComponent = () => {
 		ambientLight2.layers.set(1);
 		scene.add(ambientLight2);
 
-		const color = new THREE.Color(0xff9c00);
-		const intensity = 0.1;
-
-		addWindowLight(0.55, 1.05, intensity, color, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
-		addWindowLight(0.425, 0.85, intensity, color, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
-		addWindowLight(0.5, 0.95, intensity, color, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
+		addWindowLight(0.55, 1.05, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
+		addWindowLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
+		addWindowLight(0.5, 0.95, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
 
 		//addScreenLight(0.33, 0.18, 25, new THREE.Color(0xffffff), scene, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
 

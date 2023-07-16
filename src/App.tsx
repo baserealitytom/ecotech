@@ -10,7 +10,7 @@ console.log('url', import.meta.url);
 const LoadingScreen: FunctionComponent = () => {
 	return (
 		<div className='LoadingScreen'>
-			<img src='/ecotech/ecotechlogo.png'></img>
+			<img src='/ecotechlogo.png'></img>
 			<span>Loading</span>
 		</div>
 	)
@@ -111,7 +111,7 @@ const THREEScene: FunctionComponent = () => {
 const Watermark: FunctionComponent = () => {
 	return (
 		<div className='watermark'>
-			<img src='/ecotech/ecotechlogo.png'></img>
+			<img src='/ecotechlogo.png'></img>
 			<span style={{ right: '0' }}>SmartThermo™</span>
 		</div>
 	)

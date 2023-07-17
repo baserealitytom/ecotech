@@ -31,9 +31,15 @@ const Slider: FunctionComponent = () => {
 		window.addEventListener('pointermove', (e) => {
 			if (mouseDown) {
 				slideX = e.clientX;
-				sliderRef.current.style.left = slideX + 'px';
 			}
 		});
+		requestAnimationFrame(frame);
+		function frame() {
+			const mod = 0.05;
+			const currentX = window.getComputedStyle(sliderRef.current).getPropertyValue('left');
+			sliderRef.current.style.left = (parseFloat(currentX) * (1 - mod) + (slideX * mod)) + 'px';
+			requestAnimationFrame(frame);
+		};
 	}, []);
 	return (
 		<div ref={sliderRef} className='Slider'>

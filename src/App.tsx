@@ -88,7 +88,7 @@ const THREEScene: FunctionComponent = () => {
 		scene.add(rectLight);
 	};*/
 
-	const addScreenLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+	const addScreenLight = (width: number, height: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
 		//const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
 		//const rectLightHelper = new RectAreaLightHelper(rectLight);
 		const geometry = new THREE.PlaneGeometry(width, height);
@@ -183,7 +183,7 @@ const THREEScene: FunctionComponent = () => {
 		addWindowLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
 		addWindowLight(0.5, 0.95, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
 
-		addScreenLight(0.33, 0.18, 25, new THREE.Color(0xffffff), scene, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
+		addScreenLight(0.33, 0.18, new THREE.Color(0xffffff), scene, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
 
 		//const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();

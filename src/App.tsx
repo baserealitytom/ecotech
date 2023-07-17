@@ -37,7 +37,6 @@ const Slider: FunctionComponent = () => {
 	}, []);
 	return (
 		<div ref={sliderRef} className='Slider'>
-			<div className='SliderButton'></div>
 			<div className='SliderLine'></div>
 		</div>
 	)
@@ -63,7 +62,8 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.update();
 
 		const slidePercentage = slideX / window.innerWidth;
-		if (mouseDown) threeCameraMask.position.set((0.46 * slidePercentage) - 0.23, 0, 0);
+		const width = 0.15;
+		if (mouseDown) threeCameraMask.position.set((slidePercentage * width * 2) - (width), 0, 0);
 
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
@@ -115,13 +115,13 @@ const THREEScene: FunctionComponent = () => {
 		threeCameraMask = new THREE.Mesh(geometry, material);
 		threeCameraMask.renderOrder = 1;
 		threeCameraMask.position.set(0, 0, 0);
-		threeCameraMask.scale.set(1, 1, 1);
+		threeCameraMask.scale.set(2, 1, 1);
 
 		const group = new THREE.Group();
 
 		group.add(threeCameraMask);
 
-		group.position.set(width / 2, 0, -0.1);
+		group.position.set(width, 0, -0.1);
 
 		camera.add(group);
 	};
@@ -188,7 +188,9 @@ const THREEScene: FunctionComponent = () => {
 		//const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();
 
-		loader.load('/ecotech/house.glb', (gltf) => {
+		const urlGLB = '/ecotech/house.glb';
+
+		loader.load(urlGLB, (gltf) => {
 			const object3D = gltf.scene;
 			scene.add(object3D);
 			//assets3D.push(object3D);
@@ -200,7 +202,7 @@ const THREEScene: FunctionComponent = () => {
 
 		addCameraMask(camera, 0.15, 0.2, new THREE.Color(0xffffff)); // render order 1
 
-		loader.load('/ecotech/house.glb', (gltf) => {
+		loader.load(urlGLB, (gltf) => {
 			const object3D = gltf.scene;
 			scene.add(object3D);
 			//assets3D.push(object3D);
@@ -218,7 +220,7 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.update();
 		orbitControls.enableZoom = false;
 
-		camera.position.z = 7;
+		camera.position.z = 5;
 
 		renderer.setSize(window.innerWidth, window.innerHeight);
 

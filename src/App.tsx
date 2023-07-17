@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
-import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
+//import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 
 let mouseDown = false;
 let slideX = 0;
@@ -29,7 +29,6 @@ const Slider: FunctionComponent = () => {
 			mouseDown = false;
 		});
 		window.addEventListener('pointermove', (e) => {
-			console.log(mouseDown);
 			if (mouseDown) {
 				slideX = e.clientX;
 				sliderRef.current.style.left = slideX + 'px';
@@ -37,7 +36,10 @@ const Slider: FunctionComponent = () => {
 		});
 	}, []);
 	return (
-		<div ref={sliderRef} className='Slider'></div>
+		<div ref={sliderRef} className='Slider'>
+			<div className='SliderButton'></div>
+			<div className='SliderLine'></div>
+		</div>
 	)
 }
 
@@ -61,8 +63,7 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.update();
 
 		const slidePercentage = slideX / window.innerWidth;
-		const x = 0.15 * slidePercentage;
-		if (mouseDown) threeCameraMask.position.set(x, 0, -0.1);
+		if (mouseDown) threeCameraMask.position.set((0.46 * slidePercentage) - 0.23, 0, 0);
 
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
@@ -106,14 +107,22 @@ const THREEScene: FunctionComponent = () => {
 
 	const addCameraMask = (camera: THREE.PerspectiveCamera, width: number, height: number, color: THREE.Color) => {
 		const geometry = new THREE.PlaneGeometry(width, height);
-		const material = new THREE.MeshBasicMaterial({ color: color });
+		const material = new THREE.MeshBasicMaterial({ color: color, opacity: 0.5, transparent: true });
 		material.side = THREE.DoubleSide;
-		material.colorWrite = false;
+		//material.colorWrite = false;
 
 		threeCameraMask = new THREE.Mesh(geometry, material);
 		threeCameraMask.renderOrder = 1;
-		threeCameraMask.position.set(width / 2, 0, -0.1);
-		camera.add(threeCameraMask);
+		threeCameraMask.position.set(0, 0, 0);
+		threeCameraMask.scale.set(1, 1, 1);
+
+		const group = new THREE.Group();
+
+		group.add(threeCameraMask);
+
+		group.position.set(width / 2, 0, -0.1);
+
+		camera.add(group);
 	};
 
 	const addWindowLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
@@ -254,8 +263,8 @@ const App = () => {
 	return (
 		<div>
 			{!isLoaded && <LoadingScreen />}
-			<Watermark />
 			<Slider />
+			<Watermark />
 			{!isLoaded && <SmartThermostat />}
 			<THREEScene />
 		</div>

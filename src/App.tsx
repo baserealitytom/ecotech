@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 
 let mouseDown = false;
-let slideX = 0;
+let slideX = window.innerWidth / 2;
 let threeCameraMask: THREE.Mesh;
 
 const LoadingScreen: FunctionComponent = () => {

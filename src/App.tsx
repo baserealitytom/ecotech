@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
 //import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
+import { UIPanelMultistage, UIPanelProperties } from './UIPanels';
 
 let mouseDown = false;
 let slideX = window.innerWidth / 2;
@@ -19,7 +20,11 @@ const LoadingScreen: FunctionComponent = () => {
 	)
 };
 
-const Slider: FunctionComponent = () => {
+interface SliderProperties {
+	show: boolean
+}
+
+const Slider: FunctionComponent<SliderProperties> = (props) => {
 	const sliderRef = useRef<HTMLDivElement>(null!);
 	useEffect(() => {
 		sliderRef.current.addEventListener('pointerdown', () => {
@@ -163,6 +168,11 @@ const THREEScene: FunctionComponent = () => {
 
 		scene.add(camera);
 
+		const sceneGroup = new THREE.Group();
+		scene.add(sceneGroup);
+
+		sceneGroup.position.set(0, 0, 0);
+
 		orbitControls.autoRotate = true;
 		orbitControls.autoRotateSpeed = 2;
 		orbitControls.enableDamping = true;
@@ -171,19 +181,19 @@ const THREEScene: FunctionComponent = () => {
 
 		const directionalLight = new THREE.DirectionalLight(new THREE.Color(0xffffff), 0.4);
 		directionalLight.layers.set(0);
-		scene.add(directionalLight);
+		sceneGroup.add(directionalLight);
 
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5);
 		ambientLight.layers.set(0);
-		scene.add(ambientLight);
+		sceneGroup.add(ambientLight);
 
 		const directionalLight2 = new THREE.DirectionalLight(new THREE.Color(0xffffff), 0.5);
 		directionalLight2.layers.set(1);
-		scene.add(directionalLight2);
+		sceneGroup.add(directionalLight2);
 
 		const ambientLight2 = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.3);
 		ambientLight2.layers.set(1);
-		scene.add(ambientLight2);
+		sceneGroup.add(ambientLight2);
 
 		addWindowLight(0.55, 1.05, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
 		addWindowLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
@@ -198,7 +208,7 @@ const THREEScene: FunctionComponent = () => {
 
 		loader.load(urlGLB, (gltf) => {
 			const object3D = gltf.scene;
-			scene.add(object3D);
+			sceneGroup.add(object3D);
 			//assets3D.push(object3D);
 			object3D.scale.set(0.1, 0.1, 0.1);
 			object3D.position.set(-0.5, 0, 0);
@@ -210,7 +220,7 @@ const THREEScene: FunctionComponent = () => {
 
 		loader.load(urlGLB, (gltf) => {
 			const object3D = gltf.scene;
-			scene.add(object3D);
+			sceneGroup.add(object3D);
 			//assets3D.push(object3D);
 			object3D.scale.set(0.1, 0.1, 0.1);
 			object3D.position.set(-0.5, 0, 0);
@@ -263,16 +273,31 @@ const SmartThermostat: FunctionComponent = () => {
 
 const App = () => {
 	const [isLoaded, setIsLoaded] = useState(false);
+	const [showIntroUI, setShowIntroUI] = useState(false);
+	const [showSlider, setShowSlider] = useState(false);
 	const simulateLoadTimeMS = 500;
+	const introPanelProperties: UIPanelProperties[] = [
+		{ description: 'SmartThermo brings peace of mind to your home', isButton: true, buttonDescription: 'See the benefits' },
+		{ description: 'Slide the swiper to reveal the difference', isButton: true, buttonDescription: 'Take me there' }
+	]
+
 	useEffect(() => {
 		setTimeout(() => {
+			const introUIPopupTimeMS = 1000;
 			setIsLoaded(true);
+			setTimeout(() => setShowIntroUI(true), introUIPopupTimeMS);
 		}, simulateLoadTimeMS);
 	}, []);
+
+	const panelsCompleted = () => {
+		setShowSlider(true);
+	};
+
 	return (
 		<div>
 			{!isLoaded && <LoadingScreen />}
-			<Slider />
+			{showSlider && <Slider show={showSlider} />}
+			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} />
 			<Watermark />
 			{!isLoaded && <SmartThermostat />}
 			<THREEScene />

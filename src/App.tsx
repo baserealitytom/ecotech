@@ -20,11 +20,7 @@ const LoadingScreen: FunctionComponent = () => {
 	)
 };
 
-interface SliderProperties {
-	show: boolean
-}
-
-const Slider: FunctionComponent<SliderProperties> = (props) => {
+const Slider: FunctionComponent = () => {
 	const sliderRef = useRef<HTMLDivElement>(null!);
 	useEffect(() => {
 		sliderRef.current.addEventListener('pointerdown', () => {
@@ -275,6 +271,7 @@ const App = () => {
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [showIntroUI, setShowIntroUI] = useState(false);
 	const [showSlider, setShowSlider] = useState(false);
+
 	const simulateLoadTimeMS = 500;
 	const introPanelProperties: UIPanelProperties[] = [
 		{ description: 'SmartThermo brings peace of mind to your home', isButton: true, buttonDescription: 'See the benefits' },
@@ -296,7 +293,7 @@ const App = () => {
 	return (
 		<div>
 			{!isLoaded && <LoadingScreen />}
-			{showSlider && <Slider show={showSlider} />}
+			{showSlider && <Slider />}
 			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} />
 			<Watermark />
 			{!isLoaded && <SmartThermostat />}

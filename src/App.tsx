@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
-//import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
+import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 import { UIPanelMultistage, UIPanelProperties, UIPanel } from './UIPanels';
 
 let mouseDown = false;
@@ -26,7 +26,7 @@ interface SliderProperties {
 
 const Slider: FunctionComponent<SliderProperties> = (props) => {
 	const sliderRef = useRef<HTMLDivElement>(null!);
-	let sliderCompleted = false;
+	const [sliderCompleted, setSliderCompleted] = useState(false);
 	useEffect(() => {
 
 		sliderRef.current.addEventListener('pointerdown', () => {
@@ -50,7 +50,7 @@ const Slider: FunctionComponent<SliderProperties> = (props) => {
 			if (sliderCompleted === false) {
 				if (slideX >= window.innerWidth * 0.7) {
 					props.onSliderCompletion();
-					sliderCompleted = true;
+					setSliderCompleted(true);
 				}
 			}
 			requestAnimationFrame(frame);
@@ -85,7 +85,7 @@ const THREEScene: FunctionComponent = () => {
 
 		const slidePercentage = slideX / window.innerWidth;
 		const width = 0.15;
-		if (mouseDown) threeCameraMask.position.set((slidePercentage * width * 2) - (width), 0, 0);
+		threeCameraMask.position.set((slidePercentage * width * 2) - (width), 0, 0);
 
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
@@ -102,17 +102,7 @@ const THREEScene: FunctionComponent = () => {
 		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls));
 	};
 
-	/*const addRectLight = (width: number, height: number, intensity: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
-		const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
-		const rectLightHelper = new RectAreaLightHelper(rectLight);
-		rectLight.rotation.copy(rotation);
-		rectLight.position.copy(position);
-		scene.add(rectLight);
-	};*/
-
 	const addScreenLight = (width: number, height: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
-		//const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
-		//const rectLightHelper = new RectAreaLightHelper(rectLight);
 		const geometry = new THREE.PlaneGeometry(width, height);
 		const material = new THREE.MeshBasicMaterial({ color: color });
 		material.side = THREE.DoubleSide;
@@ -146,6 +136,16 @@ const THREEScene: FunctionComponent = () => {
 		group.position.set(width, 0, -0.1);
 
 		camera.add(group);
+	};
+
+	const addRectLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+		const rectLight = new THREE.RectAreaLight(new THREE.Color(0xffffff), 20, width, height);
+		const rectLightHelper = new RectAreaLightHelper(rectLight);
+		rectLight.layers.set(1);
+		rectLight.rotation.copy(rotation);
+		rectLight.position.copy(position);
+		scene.add(rectLight);
+		scene.add(rectLightHelper);
 	};
 
 	const addWindowLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
@@ -184,7 +184,7 @@ const THREEScene: FunctionComponent = () => {
 
 		sceneGroup.position.set(0, 0, 0);
 
-		orbitControls.autoRotate = true;
+		orbitControls.autoRotate = false;
 		orbitControls.autoRotateSpeed = 2;
 		orbitControls.enableDamping = true;
 		orbitControls.dampingFactor = .01;
@@ -209,6 +209,10 @@ const THREEScene: FunctionComponent = () => {
 		addWindowLight(0.55, 1.05, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
 		addWindowLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
 		addWindowLight(0.5, 0.95, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
+
+		addRectLight(0.55, 1.05, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
+		addRectLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
+		addRectLight(0.5, 0.95, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
 
 		addScreenLight(0.33, 0.18, new THREE.Color(0xffffff), scene, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
 
@@ -288,7 +292,6 @@ const App = () => {
 	const [showTopPanelUI, setShowTopPanelUI] = useState(false);
 	const [showRevealPanelUI, setShowRevealPanelUI] = useState(false);
 	const [showSlider, setShowSlider] = useState(false);
-	const topPanel = useRef<JSX.Element>(null!);
 
 	const simulateLoadTimeMS = 500;
 

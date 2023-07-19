@@ -9,15 +9,16 @@ interface UIPanelProperties {
 };
 
 interface UIPanelEvents extends UIPanelProperties {
-	onButtonClicked: (index: number) => void,
-	index: number
+	onButtonClicked?: (index: number) => void,
+	index: number,
+	className: string
 }
 
 const UIPanel: FunctionComponent<UIPanelEvents> = (props) => {
 	const group = useRef<HTMLDivElement>(null!);
 
 	useEffect(() => {
-		if (props.display) show();
+		props.display ? show() : hide();
 	}, [props.display]);
 
 	const hide = () => {
@@ -26,7 +27,7 @@ const UIPanel: FunctionComponent<UIPanelEvents> = (props) => {
 	};
 
 	const clicked = () => {
-		props.onButtonClicked(props.index);
+		if (props.onButtonClicked) props.onButtonClicked(props.index);
 		hide();
 	};
 
@@ -36,7 +37,7 @@ const UIPanel: FunctionComponent<UIPanelEvents> = (props) => {
 	}
 
 	return (
-		<div ref={group} className='UIPanel' style={{ opacity: '0', pointerEvents: 'none', '--transitionSeconds': props.transitionSeconds } as CSSProperties}>
+		<div ref={group} className={props.className} style={{ opacity: '0', pointerEvents: 'none', '--transitionSeconds': props.transitionSeconds } as CSSProperties}>
 			<span>{props.description}</span>
 			{props.isButton && <button onPointerDown={clicked}>{props.buttonDescription}</button>}
 		</div>
@@ -47,6 +48,7 @@ interface UIPanelMultistageProperties {
 	UIPanelProperties: UIPanelProperties[];
 	show: boolean;
 	onPanelsCompletion: () => void;
+	className: string;
 }
 
 const UIPanelMultistage: FunctionComponent<UIPanelMultistageProperties> = (props) => {
@@ -73,7 +75,8 @@ const UIPanelMultistage: FunctionComponent<UIPanelMultistageProperties> = (props
 	return (
 		<>
 			{props.UIPanelProperties.map((UIPanelProperties, index) => {
-				return <UIPanel {...UIPanelProperties} display={index === activeIndex} onButtonClicked={buttonClicked} index={index} key={`UIPanelMultistage${index}`} transitionSeconds={1} />
+				return <UIPanel {...UIPanelProperties} display={index === activeIndex} onButtonClicked={buttonClicked}
+					index={index} key={`UIPanelMultistage${index}`} transitionSeconds={1} className={props.className} />
 			})}
 		</>
 	)

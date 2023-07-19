@@ -5,10 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //import { vertexShader, fragmentShader } from './shader';
 //import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
-import { UIPanelMultistage, UIPanelProperties } from './UIPanels';
+import { UIPanelMultistage, UIPanelProperties, UIPanel } from './UIPanels';
 
 let mouseDown = false;
-let slideX = window.innerWidth / 2;
+let slideX = window.innerWidth * 0.25;
 let threeCameraMask: THREE.Mesh;
 
 const LoadingScreen: FunctionComponent = () => {
@@ -20,25 +20,42 @@ const LoadingScreen: FunctionComponent = () => {
 	)
 };
 
-const Slider: FunctionComponent = () => {
+interface SliderProperties {
+	onSliderCompletion: () => void
+}
+
+const Slider: FunctionComponent<SliderProperties> = (props) => {
 	const sliderRef = useRef<HTMLDivElement>(null!);
+	let sliderCompleted = false;
 	useEffect(() => {
+
 		sliderRef.current.addEventListener('pointerdown', () => {
 			mouseDown = true;
 		});
+
 		window.addEventListener('pointerup', () => {
 			mouseDown = false;
 		});
+
 		window.addEventListener('pointermove', (e) => {
 			if (mouseDown) {
 				slideX = e.clientX;
 			}
 		});
+
 		requestAnimationFrame(frame);
+
 		function frame() {
 			sliderRef.current.style.left = `${slideX}px`;
+			if (sliderCompleted === false) {
+				if (slideX >= window.innerWidth * 0.7) {
+					props.onSliderCompletion();
+					sliderCompleted = true;
+				}
+			}
 			requestAnimationFrame(frame);
 		};
+
 	}, []);
 	return (
 		<div ref={sliderRef} className='Slider'>
@@ -268,13 +285,20 @@ const SmartThermostat: FunctionComponent = () => {
 const App = () => {
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [showIntroUI, setShowIntroUI] = useState(false);
+	const [showTopPanelUI, setShowTopPanelUI] = useState(false);
+	const [showRevealPanelUI, setShowRevealPanelUI] = useState(false);
 	const [showSlider, setShowSlider] = useState(false);
+	const topPanel = useRef<JSX.Element>(null!);
 
 	const simulateLoadTimeMS = 500;
+
 	const introPanelProperties: UIPanelProperties[] = [
 		{ description: 'SmartThermo brings peace of mind to your home', isButton: true, buttonDescription: 'See the benefits', transitionSeconds: 1 },
 		{ description: 'Slide the swiper to reveal the difference', isButton: true, buttonDescription: 'Take me there', transitionSeconds: 1 }
-	]
+	];
+
+	const topPanelProperties: UIPanelProperties = { description: 'Slide the swiper to reveal the SmartThermo home', isButton: false, transitionSeconds: 1 };
+	const revealPanelProperties: UIPanelProperties = { description: 'The SmartThermo home leverages AI to reduce bills & energy consumption', isButton: false, transitionSeconds: 1 };
 
 	useEffect(() => {
 		setTimeout(() => {
@@ -286,14 +310,23 @@ const App = () => {
 
 	const panelsCompleted = () => {
 		setShowSlider(true);
+		setShowTopPanelUI(true);
+	};
+
+	const sliderCompleted = () => {
+		const panelRevealMS = 1000;
+		setShowTopPanelUI(false);
+		setTimeout(() => setShowRevealPanelUI(true), panelRevealMS);
 	};
 
 	return (
 		<div>
 			{!isLoaded && <LoadingScreen />}
-			{showSlider && <Slider />}
+			{showSlider && <Slider onSliderCompletion={sliderCompleted} />}
 			<Watermark />
-			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} />
+			<UIPanel display={showRevealPanelUI} index={0} className='topPanel' {...revealPanelProperties} />
+			<UIPanel display={showTopPanelUI} index={0} className='topPanel' {...topPanelProperties} />
+			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} className='UIPanel' />
 			{!isLoaded && <SmartThermostat />}
 			<THREEScene />
 		</div>

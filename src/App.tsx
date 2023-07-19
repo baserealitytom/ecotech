@@ -36,9 +36,7 @@ const Slider: FunctionComponent = () => {
 		});
 		requestAnimationFrame(frame);
 		function frame() {
-			const mod = 0.05;
-			const currentX = window.getComputedStyle(sliderRef.current).getPropertyValue('left');
-			sliderRef.current.style.left = (parseFloat(currentX) * (1 - mod) + (slideX * mod)) + 'px';
+			sliderRef.current.style.left = `${slideX}px`;
 			requestAnimationFrame(frame);
 		};
 	}, []);
@@ -274,8 +272,8 @@ const App = () => {
 
 	const simulateLoadTimeMS = 500;
 	const introPanelProperties: UIPanelProperties[] = [
-		{ description: 'SmartThermo brings peace of mind to your home', isButton: true, buttonDescription: 'See the benefits' },
-		{ description: 'Slide the swiper to reveal the difference', isButton: true, buttonDescription: 'Take me there' }
+		{ description: 'SmartThermo brings peace of mind to your home', isButton: true, buttonDescription: 'See the benefits', transitionSeconds: 1 },
+		{ description: 'Slide the swiper to reveal the difference', isButton: true, buttonDescription: 'Take me there', transitionSeconds: 1 }
 	]
 
 	useEffect(() => {
@@ -294,8 +292,8 @@ const App = () => {
 		<div>
 			{!isLoaded && <LoadingScreen />}
 			{showSlider && <Slider />}
-			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} />
 			<Watermark />
+			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} />
 			{!isLoaded && <SmartThermostat />}
 			<THREEScene />
 		</div>

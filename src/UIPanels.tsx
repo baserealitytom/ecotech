@@ -1,10 +1,11 @@
-import { useRef, useState, useEffect, FunctionComponent } from 'react';
+import { useRef, useState, useEffect, FunctionComponent, CSSProperties } from 'react';
 
 interface UIPanelProperties {
 	display?: boolean,
 	description: string,
 	isButton: boolean,
-	buttonDescription?: string
+	buttonDescription?: string,
+	transitionSeconds: number
 };
 
 interface UIPanelEvents extends UIPanelProperties {
@@ -35,7 +36,7 @@ const UIPanel: FunctionComponent<UIPanelEvents> = (props) => {
 	}
 
 	return (
-		<div ref={group} className='UIPanel' style={{ opacity: '0', pointerEvents: 'none' }}>
+		<div ref={group} className='UIPanel' style={{ opacity: '0', pointerEvents: 'none', '--transitionSeconds': props.transitionSeconds } as CSSProperties}>
 			<span>{props.description}</span>
 			{props.isButton && <button onPointerDown={clicked}>{props.buttonDescription}</button>}
 		</div>
@@ -56,7 +57,7 @@ const UIPanelMultistage: FunctionComponent<UIPanelMultistageProperties> = (props
 	const buttonClicked = (index: number) => {
 		const nextIndex = index + 1;
 		if (nextIndex < props.UIPanelProperties.length) {
-			const transitionTimeMS = 1000;
+			const transitionTimeMS = props.UIPanelProperties[index].transitionSeconds * 1000;
 			setTimeout(() => setActiveIndex(nextIndex), transitionTimeMS);
 		} else {
 			props.onPanelsCompletion();
@@ -72,7 +73,7 @@ const UIPanelMultistage: FunctionComponent<UIPanelMultistageProperties> = (props
 	return (
 		<>
 			{props.UIPanelProperties.map((UIPanelProperties, index) => {
-				return <UIPanel {...UIPanelProperties} display={index === activeIndex} onButtonClicked={buttonClicked} index={index} key={`UIPanelMultistage${index}`} />
+				return <UIPanel {...UIPanelProperties} display={index === activeIndex} onButtonClicked={buttonClicked} index={index} key={`UIPanelMultistage${index}`} transitionSeconds={1} />
 			})}
 		</>
 	)

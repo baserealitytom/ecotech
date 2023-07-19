@@ -81,8 +81,9 @@
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	transition: opacity 1s;
+	transition-duration: calc(var(--transitionSeconds) * 1s);
 	transition-timing-function: ease-in-out;
+	transition-property: opacity;
 }
 
 .UIPanel span {
@@ -107,6 +108,7 @@
 	left: 50%;
 	transform: translate(-50%, 0);
 	width: 100px;
+	transition: left 0.1s;
 }
 
 .SliderLine {

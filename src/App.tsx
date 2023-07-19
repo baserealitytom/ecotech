@@ -48,7 +48,7 @@ const Slider: FunctionComponent<SliderProperties> = (props) => {
 		function frame() {
 			sliderRef.current.style.left = `${slideX}px`;
 			if (sliderCompleted === false) {
-				if (slideX >= window.innerWidth * 0.7) {
+				if (slideX >= window.innerWidth / 2) {
 					props.onSliderCompletion();
 					setSliderCompleted(true);
 				}
@@ -67,6 +67,23 @@ const Slider: FunctionComponent<SliderProperties> = (props) => {
 const THREEScene: FunctionComponent = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null!);
 
+	const raycaster = new THREE.Raycaster();
+	const pointer = new THREE.Vector2();
+	let pointerDown = false;
+
+	window.addEventListener('pointermove', (event) => {
+		pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+		pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+	});
+
+	window.addEventListener('pointerdown', () => {
+		pointerDown = true;
+	});
+
+	window.addEventListener('pointerup', () => {
+		pointerDown = false;
+	});
+
 	//const clock = new THREE.Clock();
 
 	/*const shaderUniforms = {
@@ -79,16 +96,25 @@ const THREEScene: FunctionComponent = () => {
 		}
 	}*/
 
+	const touchpoints: THREE.Mesh[] = [];
+
 	const render = (renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, orbitControls: OrbitControls) => {
 		//renderer.render(scene, camera);
 		orbitControls.update();
-
 		const slidePercentage = slideX / window.innerWidth;
 		const width = 0.15;
 		threeCameraMask.position.set((slidePercentage * width * 2) - (width), 0, 0);
 
+		raycaster.setFromCamera(pointer, camera);
+		const intersects = raycaster.intersectObjects(touchpoints);
+		intersects.map(intersect => {
+		});
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
+
+		touchpoints.map(touchpoint => {
+			touchpoint.quaternion.copy(camera.quaternion);
+		});
 
 		renderer.autoClear = true;
 		camera.layers.set(0);
@@ -149,8 +175,6 @@ const THREEScene: FunctionComponent = () => {
 	};
 
 	const addWindowLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
-		//const rectLight = new THREE.RectAreaLight(color, intensity, width, height);
-		//const rectLightHelper = new RectAreaLightHelper(rectLight);
 		const geometry = new THREE.PlaneGeometry(width, height);
 		const material = new THREE.MeshBasicMaterial();
 		material.side = THREE.DoubleSide;
@@ -164,6 +188,18 @@ const THREEScene: FunctionComponent = () => {
 		/*const pointLight = new THREE.PointLight(color, intensity, 1);
 		pointLight.position.copy(position);
 		scene.add(pointLight);*/
+	};
+
+	const addTouchpoint = (sceneGroup: THREE.Group, position: THREE.Vector3, texture: THREE.Texture) => {
+		const geo = new THREE.PlaneGeometry(1, 1);
+		const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.7 });
+		const mesh = new THREE.Mesh(geo, material);
+		sceneGroup.add(mesh);
+		mesh.position.copy(position);
+		const scale = 0.6;
+		mesh.scale.set(scale, scale, 1);
+		mesh.layers.set(1);
+		touchpoints.push(mesh);
 	};
 
 	useEffect(() => {
@@ -231,6 +267,14 @@ const THREEScene: FunctionComponent = () => {
 			object3D.traverse(mesh => mesh.layers.set(1));
 		});
 
+		const texture = new THREE.TextureLoader().load('/touchpoint.png');
+
+		addTouchpoint(sceneGroup, new THREE.Vector3(-1.1, 0.7, 1.535), texture);
+
+		addTouchpoint(sceneGroup, new THREE.Vector3(-1.1, 0.7, -1.5), texture);
+
+		addTouchpoint(sceneGroup, new THREE.Vector3(0.7, 0.7, 1.535), texture);
+
 		addCameraMask(camera, 0.15, 0.2, new THREE.Color(0xffffff)); // render order 1
 
 		loader.load(urlGLB, (gltf) => {
@@ -286,7 +330,7 @@ const SmartThermostat: FunctionComponent = () => {
 	)
 };
 
-const App = () => {
+const ExperienceUI = () => {
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [showIntroUI, setShowIntroUI] = useState(false);
 	const [showTopPanelUI, setShowTopPanelUI] = useState(false);
@@ -331,6 +375,14 @@ const App = () => {
 			<UIPanel display={showTopPanelUI} index={0} className='topPanel' {...topPanelProperties} />
 			<UIPanelMultistage UIPanelProperties={introPanelProperties} show={showIntroUI} onPanelsCompletion={panelsCompleted} className='UIPanel' />
 			{!isLoaded && <SmartThermostat />}
+		</div>
+	)
+};
+
+const App = () => {
+	return (
+		<div>
+			<ExperienceUI />
 			<THREEScene />
 		</div>
 	)

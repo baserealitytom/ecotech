@@ -138,14 +138,14 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.update();
 		const mod = 0.5;
 		const worldPos = getWorldPositionFromScreenVector2(camera, moveTo);
-		const pointerWorldPos = getWorldPositionFromScreenVector2(camera, pointer);
+		//const pointerWorldPos = getWorldPositionFromScreenVector2(camera, pointer);
 		threeCameraMask.position.set(worldPos.x * (1 - mod) + threeCameraMask.position.x * mod, 0, -camera.position.z);
 		//raycaster.setFromCamera(new THREE.Vector2(worldPos.x, worldPos.y), camera);
 		raycaster.setFromCamera(pointer, camera);
 
 		//sceneGroup.rotation.y += 0.001;
 		if (quaternionsMultiplied) sceneGroup.quaternion.slerp(quaternionsMultiplied, 0.1);
-		const intersects = raycaster.intersectObjects(scene.children);
+		//const intersects = raycaster.intersectObjects(scene.children);
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
 
@@ -326,7 +326,7 @@ const THREEScene: FunctionComponent = () => {
 			object3D.traverse(mesh => mesh.layers.set(1));
 		});
 
-		const texture = new THREE.TextureLoader().load('/touchpoint.png');
+		const texture = new THREE.TextureLoader().load('/ecotech/touchpoint.png');
 
 		addTouchpoint(sceneGroup, new THREE.Vector3(-1.1, 0.7, 1.535), texture);
 		addTouchpoint(sceneGroup, new THREE.Vector3(-1.1, 0.7, -1.5), texture);

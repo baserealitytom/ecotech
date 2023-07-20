@@ -8,8 +8,9 @@ import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js
 import { UIPanelMultistage, UIPanelProperties, UIPanel } from './UIPanels';
 
 let mouseDown = false;
-let slideX = window.innerWidth * 0.25;
-let threeCameraMask: THREE.Mesh;
+//let slideX = window.innerWidth * 0.25;
+let threeCameraMask: THREE.Group;
+let moveTo = new THREE.Vector2(window.innerWidth * 0.2, 0);
 
 const LoadingScreen: FunctionComponent = () => {
 	return (
@@ -39,16 +40,16 @@ const Slider: FunctionComponent<SliderProperties> = (props) => {
 
 		window.addEventListener('pointermove', (e) => {
 			if (mouseDown) {
-				slideX = e.clientX;
+				moveTo = new THREE.Vector2(e.clientX, e.clientY);
 			}
 		});
 
 		requestAnimationFrame(frame);
 
 		function frame() {
-			sliderRef.current.style.left = `${slideX}px`;
+			sliderRef.current.style.left = `${moveTo.x}px`;
 			if (sliderCompleted === false) {
-				if (slideX >= window.innerWidth / 2) {
+				if (moveTo.x >= window.innerWidth / 2) {
 					props.onSliderCompletion();
 					setSliderCompleted(true);
 				}
@@ -69,19 +70,10 @@ const THREEScene: FunctionComponent = () => {
 
 	const raycaster = new THREE.Raycaster();
 	const pointer = new THREE.Vector2();
-	let pointerDown = false;
 
 	window.addEventListener('pointermove', (event) => {
 		pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
 		pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
-	});
-
-	window.addEventListener('pointerdown', () => {
-		pointerDown = true;
-	});
-
-	window.addEventListener('pointerup', () => {
-		pointerDown = false;
 	});
 
 	//const clock = new THREE.Clock();
@@ -98,17 +90,15 @@ const THREEScene: FunctionComponent = () => {
 
 	const touchpoints: THREE.Mesh[] = [];
 
-	const render = (renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, orbitControls: OrbitControls) => {
-		//renderer.render(scene, camera);
+	const render = (renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, orbitControls: OrbitControls, sceneGroup: THREE.Group) => {
 		orbitControls.update();
-		const slidePercentage = slideX / window.innerWidth;
-		const width = 0.15;
-		threeCameraMask.position.set((slidePercentage * width * 2) - (width), 0, 0);
-
+		const mod = 0.5;
+		const worldPos = getWorldPositionFromScreenVector2(camera, moveTo);
+		threeCameraMask.position.set(worldPos.x * (1 - mod) + threeCameraMask.position.x * mod, 0, -camera.position.z);
 		raycaster.setFromCamera(pointer, camera);
-		const intersects = raycaster.intersectObjects(touchpoints);
-		intersects.map(intersect => {
-		});
+
+		sceneGroup.rotation.y += 0.001;
+		//const intersects = raycaster.intersectObjects(touchpoints);
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
 
@@ -125,10 +115,10 @@ const THREEScene: FunctionComponent = () => {
 		camera.layers.set(1);
 		renderer.render(scene, camera);
 
-		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls));
+		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls, sceneGroup));
 	};
 
-	const addScreenLight = (width: number, height: number, color: THREE.Color, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+	const addScreenLight = (width: number, height: number, color: THREE.Color, sceneGroup: THREE.Group, position: THREE.Vector3, rotation: THREE.Euler) => {
 		const geometry = new THREE.PlaneGeometry(width, height);
 		const material = new THREE.MeshBasicMaterial({ color: color });
 		material.side = THREE.DoubleSide;
@@ -136,7 +126,7 @@ const THREEScene: FunctionComponent = () => {
 		const screenLight = new THREE.Mesh(geometry, material);
 		screenLight.rotation.copy(rotation);
 		screenLight.position.copy(position);
-		scene.add(screenLight);
+		sceneGroup.add(screenLight);
 		screenLight.layers.set(1);
 
 		/*const pointLight = new THREE.PointLight(color, intensity, 1);
@@ -144,37 +134,61 @@ const THREEScene: FunctionComponent = () => {
 		scene.add(pointLight);*/
 	};
 
-	const addCameraMask = (camera: THREE.PerspectiveCamera, width: number, height: number, color: THREE.Color) => {
-		const geometry = new THREE.PlaneGeometry(width, height);
-		const material = new THREE.MeshBasicMaterial({ color: color, opacity: 0.5, transparent: true });
-		material.side = THREE.DoubleSide;
-		material.colorWrite = false;
+	const getWorldPositionFromScreenVector2 = (camera: THREE.PerspectiveCamera, vec2: THREE.Vector2) => {
 
-		threeCameraMask = new THREE.Mesh(geometry, material);
-		threeCameraMask.renderOrder = 1;
-		threeCameraMask.position.set(0, 0, 0);
-		threeCameraMask.scale.set(2, 1, 1);
+		const normalX = vec2.x / window.innerWidth * 2 - 1;
+		const normalY = vec2.y / window.innerHeight * 2 - 1;
 
-		const group = new THREE.Group();
+		const vector = new THREE.Vector3(normalX, -normalY, 0).unproject(camera);
+		const direction = vector.sub(camera.position).normalize();
+		const distance = -camera.position.z / direction.z;
 
-		group.add(threeCameraMask);
+		return camera.position.clone().add(direction.multiplyScalar(distance));
 
-		group.position.set(width, 0, -0.1);
-
-		camera.add(group);
 	};
 
-	const addRectLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
-		const rectLight = new THREE.RectAreaLight(new THREE.Color(0xffffff), 20, width, height);
+	const getWorldScaleFromScreen = (camera: THREE.PerspectiveCamera) => {
+
+		const dist = camera.position.z;
+		const vFOV = THREE.MathUtils.degToRad(camera.fov);
+		const height = 2 * Math.tan(vFOV / 2) * dist;
+		const width = height * camera.aspect;
+
+		return new THREE.Vector2(width, height);
+
+	};
+
+	const addCameraMask = (camera: THREE.PerspectiveCamera) => {
+
+		const geo = new THREE.PlaneGeometry(1, 1);
+		const mat = new THREE.MeshBasicMaterial({ color: '0xffffff', transparent: true, opacity: 0.5, colorWrite: false });
+		const plane = new THREE.Mesh(geo, mat);
+		plane.renderOrder = 1;
+
+		const adjustScale = () => {
+			const worldScale = getWorldScaleFromScreen(camera);
+			plane.scale.set(worldScale.width / 2, worldScale.height, 1);
+			plane.position.set(plane.scale.x / 2, 0, 0);
+		};
+
+		threeCameraMask = new THREE.Group();
+		threeCameraMask.add(plane);
+		camera.add(threeCameraMask);
+
+		adjustScale();
+	};
+
+	const addRectLight = (width: number, height: number, sceneGroup: THREE.Group, position: THREE.Vector3, rotation: THREE.Euler) => {
+		const rectLight = new THREE.RectAreaLight(new THREE.Color(0xffffff), 20, width * 1.5, height * 1.5);
 		const rectLightHelper = new RectAreaLightHelper(rectLight);
 		rectLight.layers.set(1);
 		rectLight.rotation.copy(rotation);
 		rectLight.position.copy(position);
-		scene.add(rectLight);
-		scene.add(rectLightHelper);
+		sceneGroup.add(rectLight);
+		sceneGroup.add(rectLightHelper);
 	};
 
-	const addWindowLight = (width: number, height: number, scene: THREE.Scene, position: THREE.Vector3, rotation: THREE.Euler) => {
+	/*const addWindowLight = (width: number, height: number, sceneGroup: THREE.Group, position: THREE.Vector3, rotation: THREE.Euler) => {
 		const geometry = new THREE.PlaneGeometry(width, height);
 		const material = new THREE.MeshBasicMaterial();
 		material.side = THREE.DoubleSide;
@@ -183,12 +197,8 @@ const THREEScene: FunctionComponent = () => {
 		const screenLight = new THREE.Mesh(geometry, material);
 		screenLight.rotation.copy(rotation);
 		screenLight.position.copy(position);
-		scene.add(screenLight);
-
-		/*const pointLight = new THREE.PointLight(color, intensity, 1);
-		pointLight.position.copy(position);
-		scene.add(pointLight);*/
-	};
+		sceneGroup.add(screenLight);
+	};*/
 
 	const addTouchpoint = (sceneGroup: THREE.Group, position: THREE.Vector3, texture: THREE.Texture) => {
 		const geo = new THREE.PlaneGeometry(1, 1);
@@ -209,8 +219,12 @@ const THREEScene: FunctionComponent = () => {
 			antialias: true
 		});
 		renderer.setClearColor(new THREE.Color(0xfad4a0), 0);
-		const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 100000);
+		const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
 		camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
+
+		//camera.lookAt(0, 0, 0);
+		camera.position.z = 10;
+
 		const orbitControls = new OrbitControls(camera, renderer.domElement);
 
 		scene.add(camera);
@@ -218,10 +232,12 @@ const THREEScene: FunctionComponent = () => {
 		const sceneGroup = new THREE.Group();
 		scene.add(sceneGroup);
 
-		sceneGroup.position.set(0, 0, 0);
+		sceneGroup.scale.set(1.5, 1.5, 1.5);
+		sceneGroup.position.set(0, -1, -2.5);
 
 		orbitControls.autoRotate = false;
-		orbitControls.autoRotateSpeed = 2;
+		orbitControls.enableRotate = false;
+		orbitControls.autoRotateSpeed = 1;
 		orbitControls.enableDamping = true;
 		orbitControls.dampingFactor = .01;
 		orbitControls.update();
@@ -242,15 +258,15 @@ const THREEScene: FunctionComponent = () => {
 		ambientLight2.layers.set(1);
 		sceneGroup.add(ambientLight2);
 
-		addWindowLight(0.55, 1.05, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
-		addWindowLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
-		addWindowLight(0.5, 0.95, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
+		//addWindowLight(0.55, 1.05, sceneGroup, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
+		//addWindowLight(0.425, 0.85, sceneGroup, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
+		//addWindowLight(0.5, 0.95, sceneGroup, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
 
-		addRectLight(0.55, 1.05, scene, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
-		addRectLight(0.425, 0.85, scene, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
-		addRectLight(0.5, 0.95, scene, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
+		addRectLight(0.55, 1.05, sceneGroup, new THREE.Vector3(1.03, 1.2, -0.2), new THREE.Euler(0, Math.PI / 2, 0));
+		addRectLight(0.425, 0.85, sceneGroup, new THREE.Vector3(1.03, 1.2, 1.275), new THREE.Euler(0, Math.PI / 2, 0));
+		addRectLight(0.5, 0.95, sceneGroup, new THREE.Vector3(0.57, 1.045, -1.95), new THREE.Euler(0, Math.PI, 0));
 
-		addScreenLight(0.33, 0.18, new THREE.Color(0xffffff), scene, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
+		addScreenLight(0.33, 0.18, new THREE.Color(0xffffff), sceneGroup, new THREE.Vector3(-1.055, 0.37, 1.535), new THREE.Euler(0, 0, 0));
 
 		//const assets3D: (THREE.Group | THREE.Mesh)[] = [];
 		const loader = new GLTFLoader();
@@ -260,7 +276,6 @@ const THREEScene: FunctionComponent = () => {
 		loader.load(urlGLB, (gltf) => {
 			const object3D = gltf.scene;
 			sceneGroup.add(object3D);
-			//assets3D.push(object3D);
 			object3D.scale.set(0.1, 0.1, 0.1);
 			object3D.position.set(-0.5, 0, 0);
 			object3D.traverse(mesh => mesh.renderOrder = 2);
@@ -270,36 +285,31 @@ const THREEScene: FunctionComponent = () => {
 		const texture = new THREE.TextureLoader().load('/touchpoint.png');
 
 		addTouchpoint(sceneGroup, new THREE.Vector3(-1.1, 0.7, 1.535), texture);
-
 		addTouchpoint(sceneGroup, new THREE.Vector3(-1.1, 0.7, -1.5), texture);
-
 		addTouchpoint(sceneGroup, new THREE.Vector3(0.7, 0.7, 1.535), texture);
 
-		addCameraMask(camera, 0.15, 0.2, new THREE.Color(0xffffff)); // render order 1
+		addCameraMask(camera); // render order 1
 
 		loader.load(urlGLB, (gltf) => {
 			const object3D = gltf.scene;
 			sceneGroup.add(object3D);
-			//assets3D.push(object3D);
 			object3D.scale.set(0.1, 0.1, 0.1);
 			object3D.position.set(-0.5, 0, 0);
 			object3D.traverse(mesh => mesh.renderOrder = 0);
 			object3D.traverse(mesh => mesh.layers.set(0));
 		});
 
-		camera.lookAt(0, 0, 0);
 		orbitControls.target.set(0, 0, 0);
 		const offset = 0.1;
 		orbitControls.minPolarAngle = Math.PI / 4 - offset;
 		orbitControls.maxPolarAngle = Math.PI / 4 + offset * 5;
 		orbitControls.update();
 		orbitControls.enableZoom = false;
-
-		camera.position.z = 5;
+		orbitControls.enableRotate = false;
 
 		renderer.setSize(window.innerWidth, window.innerHeight);
 
-		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls));
+		requestAnimationFrame(() => render(renderer, scene, camera, orbitControls, sceneGroup));
 
 		window.onresize = () => {
 			const width = window.innerWidth;

@@ -61,6 +61,7 @@ const Slider: FunctionComponent<SliderProperties> = (props) => {
 	return (
 		<div ref={sliderRef} className='Slider'>
 			<div className='SliderLine'></div>
+			<div className='SliderButton'></div>
 		</div>
 	)
 }
@@ -103,7 +104,7 @@ const THREEScene: FunctionComponent = () => {
 		//const elapsed = clock.getElapsedTime();
 
 		touchpoints.map(touchpoint => {
-			touchpoint.quaternion.copy(camera.quaternion);
+			touchpoint.lookAt(camera.position);
 		});
 
 		renderer.autoClear = true;
@@ -233,7 +234,7 @@ const THREEScene: FunctionComponent = () => {
 		scene.add(sceneGroup);
 
 		sceneGroup.scale.set(1.5, 1.5, 1.5);
-		sceneGroup.position.set(0, -1, -2.5);
+		sceneGroup.position.set(0, -1, -3.5);
 
 		orbitControls.autoRotate = false;
 		orbitControls.enableRotate = false;

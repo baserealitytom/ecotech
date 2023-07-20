@@ -7,10 +7,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
 import { UIPanelMultistage, UIPanelProperties, UIPanel } from './UIPanels';
 
-let mouseDown = false;
-//let slideX = window.innerWidth * 0.25;
+let sliderPointerDown = false;
 let threeCameraMask: THREE.Group;
 let moveTo = new THREE.Vector2(window.innerWidth * 0.2, 0);
+let quaternionsMultiplied = new THREE.Quaternion();
 
 const LoadingScreen: FunctionComponent = () => {
 	return (
@@ -31,15 +31,15 @@ const Slider: FunctionComponent<SliderProperties> = (props) => {
 	useEffect(() => {
 
 		sliderRef.current.addEventListener('pointerdown', () => {
-			mouseDown = true;
+			sliderPointerDown = true;
 		});
 
 		window.addEventListener('pointerup', () => {
-			mouseDown = false;
+			sliderPointerDown = false;
 		});
 
 		window.addEventListener('pointermove', (e) => {
-			if (mouseDown) {
+			if (sliderPointerDown) {
 				moveTo = new THREE.Vector2(e.clientX, e.clientY);
 			}
 		});
@@ -72,9 +72,52 @@ const THREEScene: FunctionComponent = () => {
 	const raycaster = new THREE.Raycaster();
 	const pointer = new THREE.Vector2();
 
+	let pointerDown = false;
+
+	let group3D: THREE.Group;
+
+	window.addEventListener('pointerdown', () => {
+		pointerDown = true;
+	})
+
+	window.addEventListener('pointerup', () => {
+		pointerDown = false;
+	});
+
+	const toRadians = (delta: number) => {
+		return delta * Math.PI / 180;
+	};
+
+	let previousMousePosition = {
+		x: 0, y: 0
+	};
+
 	window.addEventListener('pointermove', (event) => {
 		pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
 		pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+		var deltaMove = {
+			x: event.clientX - previousMousePosition.x,
+			y: event.clientY - previousMousePosition.y
+		};
+
+		if (pointerDown && !sliderPointerDown && group3D) {
+
+			const deltaRotationQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, toRadians(deltaMove.x), 0, 'XYZ'));
+
+			const currentQuaternion = new THREE.Quaternion().copy(group3D.quaternion);
+
+			quaternionsMultiplied = currentQuaternion.multiply(deltaRotationQuaternion);
+
+		}
+
+		previousMousePosition = {
+			x: event.clientX,
+			y: event.clientY
+		};
+
+
+
 	});
 
 	//const clock = new THREE.Clock();
@@ -95,11 +138,14 @@ const THREEScene: FunctionComponent = () => {
 		orbitControls.update();
 		const mod = 0.5;
 		const worldPos = getWorldPositionFromScreenVector2(camera, moveTo);
+		const pointerWorldPos = getWorldPositionFromScreenVector2(camera, pointer);
 		threeCameraMask.position.set(worldPos.x * (1 - mod) + threeCameraMask.position.x * mod, 0, -camera.position.z);
+		//raycaster.setFromCamera(new THREE.Vector2(worldPos.x, worldPos.y), camera);
 		raycaster.setFromCamera(pointer, camera);
 
-		sceneGroup.rotation.y += 0.001;
-		//const intersects = raycaster.intersectObjects(touchpoints);
+		//sceneGroup.rotation.y += 0.001;
+		if (quaternionsMultiplied) sceneGroup.quaternion.slerp(quaternionsMultiplied, 0.1);
+		const intersects = raycaster.intersectObjects(scene.children);
 		//const delta = clock.getDelta();
 		//const elapsed = clock.getElapsedTime();
 
@@ -129,10 +175,6 @@ const THREEScene: FunctionComponent = () => {
 		screenLight.position.copy(position);
 		sceneGroup.add(screenLight);
 		screenLight.layers.set(1);
-
-		/*const pointLight = new THREE.PointLight(color, intensity, 1);
-		pointLight.position.copy(position);
-		scene.add(pointLight);*/
 	};
 
 	const getWorldPositionFromScreenVector2 = (camera: THREE.PerspectiveCamera, vec2: THREE.Vector2) => {
@@ -232,6 +274,7 @@ const THREEScene: FunctionComponent = () => {
 
 		const sceneGroup = new THREE.Group();
 		scene.add(sceneGroup);
+		group3D = sceneGroup;
 
 		sceneGroup.scale.set(1.5, 1.5, 1.5);
 		sceneGroup.position.set(0, -1, -3.5);

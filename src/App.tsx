@@ -9,7 +9,7 @@ import { UIPanelMultistage, UIPanelProperties, UIPanel } from './UIPanels';
 
 let sliderPointerDown = false;
 let threeCameraMask: THREE.Group;
-let moveTo = new THREE.Vector2(window.innerWidth * 0.2, 0);
+let moveTo = new THREE.Vector2(window.innerWidth * 0.15, 0);
 let quaternionsMultiplied = new THREE.Quaternion();
 
 const LoadingScreen: FunctionComponent = () => {
